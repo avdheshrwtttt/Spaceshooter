@@ -100,6 +100,21 @@ export class Audio {
     o.stop(this.now + 0.36);
   }
 
+  coin(): void {
+    if (!this.ctx) return;
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(1200, this.now);
+    o.frequency.exponentialRampToValueAtTime(1800, this.now + 0.08);
+    g.gain.setValueAtTime(0.2, this.now);
+    g.gain.exponentialRampToValueAtTime(0.001, this.now + 0.18);
+    o.connect(g);
+    g.connect(this.master);
+    o.start(this.now);
+    o.stop(this.now + 0.19);
+  }
+
   // ── Looping background music ───────────────────────────────────────────────
   startBGM(): void {
     if (!this.ctx || this.bgmStarted) return;

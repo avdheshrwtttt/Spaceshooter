@@ -41,3 +41,11 @@ export interface Vec2 {
   x: number;
   y: number;
 }
+
+/** "#38e8ff" -> [56, 232, 255] for building rgba() strings from theme colors. */
+export const hexToRgb = (hex: string): [number, number, number] => {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const n = parseInt(full, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};

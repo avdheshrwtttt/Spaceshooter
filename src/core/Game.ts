@@ -1,6 +1,8 @@
 import { Audio } from "./audio";
 import { Input } from "./input";
 import { clamp, rand, pick, circleRectHit } from "./utils";
+import { LEVELS, type LevelConfig } from "./levels";
+import { getSelectedAvatar, setSelectedAvatar } from "./avatars";
 import { Starfield } from "../fx/Starfield";
 import { Particles } from "../fx/Particles";
 import { ScreenShake } from "../fx/ScreenShake";
@@ -10,11 +12,15 @@ import { Player } from "../entities/Player";
 import { Enemy } from "../entities/Enemy";
 import { Boss } from "../entities/Boss";
 import { Powerup, POWER_KINDS } from "../entities/Powerup";
+import { Coin } from "../entities/Coin";
 import type { Bullet, EnemyKind, PowerKind } from "../entities/types";
 
 type State = "menu" | "playing" | "paused" | "gameover";
 
 const BEST_KEY = "nebula-strike-best";
+const CREDITS_KEY = "nebula-strike-credits";
+const SHIELD_KEY = "nebula-strike-shield-level";
+const SHIELD_PRICES = [50, 120, 250];
 
 export class Game {
   private ctx: CanvasRenderingContext2D;
@@ -34,6 +40,7 @@ export class Game {
   private bullets: Bullet[] = [];
   private enemies: Enemy[] = [];
   private powerups: Powerup[] = [];
+  private coinEntities: Coin[] = [];
   private boss: Boss | null = null;
 
   private state: State = "menu";
@@ -42,16 +49,19 @@ export class Game {
 
   private score = 0;
   private best = 0;
-  private wave = 0;
   private combo = 0;
   private comboTimer = 0;
   private comboFlash = 0;
 
-  private toSpawn = 0;
+  private levelIndex = 0;
+  private levelTimer = 0;
+  private bossTier = 0;
+  private bossRespawnTimer = 0;
   private spawnTimer = 0;
-  private spawnInterval = 1;
-  private bossWave = false;
-  private interWave = 0; // pause between waves
+
+  private coinsRun = 0;
+  private credits = 0;
+
   private bannerTimer = 0;
   private bannerText = "";
   private bannerSub = "";
@@ -60,16 +70,21 @@ export class Game {
   private elMenu = document.getElementById("menu")!;
   private elPause = document.getElementById("pause")!;
   private elGameOver = document.getElementById("gameover")!;
+  private elAvatarSelect = document.getElementById("avatar-select")!;
+  private elShop = document.getElementById("shop")!;
   private elTouchFire = document.getElementById("touch-fire") as HTMLButtonElement;
 
   constructor(private canvas: HTMLCanvasElement, shipImg: HTMLImageElement) {
     this.ctx = canvas.getContext("2d")!;
-    this.player = new Player(shipImg);
+    this.player = new Player(shipImg, getSelectedAvatar());
     this.input = new Input(canvas);
     this.starfield = new Starfield(1, 1);
 
     this.best = Number(localStorage.getItem(BEST_KEY) ?? 0) || 0;
+    this.credits = Number(localStorage.getItem(CREDITS_KEY) ?? 0) || 0;
     this.updateBestLabels();
+    this.refreshPilotUI();
+    this.updateCreditsLabels();
 
     this.input.onAnyKey = () => {
       this.audio.resume();
@@ -81,6 +96,7 @@ export class Game {
     window.addEventListener("resize", () => this.resize());
 
     this.wireButtons();
+    this.wireParallax();
     this.detectTouch();
 
     this.last = performance.now();
@@ -100,6 +116,23 @@ export class Game {
     on("resume-btn", () => this.togglePause());
     on("menu-btn", () => this.toMenu());
     on("quit-btn", () => this.toMenu());
+    on("pilot-btn", () => this.openAvatarSelect());
+    on("avatar-back-btn", () => this.closeAvatarSelect());
+    on("shop-btn", () => this.openShop());
+    on("shop-back-btn", () => this.closeShop());
+    on("shop-buy-btn", () => this.buyShield());
+
+    document.querySelectorAll<HTMLElement>(".avatar-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        this.audio.resume();
+        this.audio.startBGM();
+        const id = card.dataset.avatar!;
+        setSelectedAvatar(id);
+        this.player.setAvatar(getSelectedAvatar());
+        this.refreshPilotUI();
+        this.closeAvatarSelect();
+      });
+    });
 
     // Touch fire button.
     const press = (down: boolean) => (e: Event) => {
@@ -109,6 +142,17 @@ export class Game {
     this.elTouchFire.addEventListener("pointerdown", press(true));
     this.elTouchFire.addEventListener("pointerup", press(false));
     this.elTouchFire.addEventListener("pointerleave", press(false));
+  }
+
+  private wireParallax() {
+    window.addEventListener("mousemove", (e) => {
+      if (this.state === "playing") return;
+      const rx = clamp((e.clientY / window.innerHeight - 0.5) * -8, -5, 5);
+      const ry = clamp((e.clientX / window.innerWidth - 0.5) * 8, -5, 5);
+      document.querySelectorAll<HTMLElement>(".menu-inner").forEach((el) => {
+        el.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+    });
   }
 
   private detectTouch() {
@@ -124,6 +168,62 @@ export class Game {
     };
     set("menu-best", this.best);
     set("go-best", this.best);
+  }
+
+  private updateCreditsLabels() {
+    const set = (id: string, v: number) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(v);
+    };
+    set("menu-credits", this.credits);
+    set("shop-credits", this.credits);
+  }
+
+  private refreshPilotUI() {
+    const a = getSelectedAvatar();
+    const portrait = document.getElementById("pilot-portrait");
+    if (portrait) portrait.className = `avatar-portrait ${a.id}`;
+    const name = document.getElementById("pilot-name");
+    if (name) name.textContent = a.name;
+    document.querySelectorAll<HTMLElement>(".avatar-card").forEach((card) => {
+      card.classList.toggle("selected", card.dataset.avatar === a.id);
+    });
+  }
+
+  private getOwnedShieldLevel(): number {
+    return clamp(Math.round(Number(localStorage.getItem(SHIELD_KEY) ?? 0) || 0), 0, SHIELD_PRICES.length);
+  }
+
+  private refreshShopUI() {
+    const lvl = this.getOwnedShieldLevel();
+    const pipsEl = document.getElementById("shop-pips");
+    if (pipsEl) {
+      pipsEl.innerHTML = SHIELD_PRICES.map((_, i) => `<span class="shop-pip${i < lvl ? " filled" : ""}"></span>`).join("");
+    }
+    const buyBtn = document.getElementById("shop-buy-btn") as HTMLButtonElement | null;
+    if (buyBtn) {
+      if (lvl >= SHIELD_PRICES.length) {
+        buyBtn.textContent = "MAXED";
+        buyBtn.disabled = true;
+      } else {
+        const price = SHIELD_PRICES[lvl];
+        buyBtn.textContent = `BUY · ${price} ◎`;
+        buyBtn.disabled = this.credits < price;
+      }
+    }
+    this.updateCreditsLabels();
+  }
+
+  private buyShield() {
+    const lvl = this.getOwnedShieldLevel();
+    if (lvl >= SHIELD_PRICES.length) return;
+    const price = SHIELD_PRICES[lvl];
+    if (this.credits < price) return;
+    this.credits -= price;
+    localStorage.setItem(CREDITS_KEY, String(this.credits));
+    localStorage.setItem(SHIELD_KEY, String(lvl + 1));
+    this.audio.powerup();
+    this.refreshShopUI();
   }
 
   private resize() {
@@ -144,25 +244,54 @@ export class Game {
     el.classList.toggle("hidden", !visible);
   }
 
+  private openAvatarSelect() {
+    this.refreshPilotUI();
+    this.show(this.elMenu, false);
+    this.show(this.elAvatarSelect, true);
+  }
+
+  private closeAvatarSelect() {
+    this.show(this.elAvatarSelect, false);
+    this.show(this.elMenu, true);
+  }
+
+  private openShop() {
+    this.refreshShopUI();
+    this.show(this.elMenu, false);
+    this.show(this.elShop, true);
+  }
+
+  private closeShop() {
+    this.show(this.elShop, false);
+    this.show(this.elMenu, true);
+  }
+
   private start() {
     this.score = 0;
-    this.wave = 0;
     this.combo = 0;
     this.comboTimer = 0;
+    this.levelIndex = 0;
+    this.levelTimer = 0;
+    this.bossTier = 0;
+    this.bossRespawnTimer = 0;
+    this.coinsRun = 0;
+    this.spawnTimer = 0;
     this.bullets.length = 0;
     this.enemies.length = 0;
     this.powerups.length = 0;
+    this.coinEntities.length = 0;
     this.boss = null;
     this.particles.clear();
     this.floats.clear();
     this.input.clear();
     this.player.reset(this.w, this.h);
+    this.player.shield = this.getOwnedShieldLevel();
     this.state = "playing";
     this.show(this.elMenu, false);
     this.show(this.elGameOver, false);
     this.show(this.elPause, false);
     this.show(this.elTouchFire, document.body.classList.contains("touch"));
-    this.nextWave();
+    this.applyLevel();
   }
 
   private toMenu() {
@@ -170,8 +299,11 @@ export class Game {
     this.show(this.elMenu, true);
     this.show(this.elPause, false);
     this.show(this.elGameOver, false);
+    this.show(this.elAvatarSelect, false);
+    this.show(this.elShop, false);
     this.show(this.elTouchFire, false);
     this.updateBestLabels();
+    this.updateCreditsLabels();
   }
 
   private togglePause() {
@@ -195,48 +327,40 @@ export class Game {
       this.best = this.score;
       localStorage.setItem(BEST_KEY, String(this.best));
     }
+    this.credits += this.coinsRun;
+    localStorage.setItem(CREDITS_KEY, String(this.credits));
     document.getElementById("go-score")!.textContent = String(this.score);
-    document.getElementById("go-wave")!.textContent = String(this.wave);
+    document.getElementById("go-level")!.textContent = String(LEVELS[this.levelIndex].index);
+    const goCoins = document.getElementById("go-coins");
+    if (goCoins) goCoins.textContent = `+${this.coinsRun} ◎ Banked`;
     this.updateBestLabels();
+    this.updateCreditsLabels();
     this.show(document.getElementById("new-best")!, isBest);
     this.show(this.elTouchFire, false);
     setTimeout(() => this.show(this.elGameOver, true), 700);
   }
 
-  // ── Waves ────────────────────────────────────────────────────────────────────
-  private nextWave() {
-    this.wave++;
-    this.bossWave = this.wave % 5 === 0;
+  // ── Levels ───────────────────────────────────────────────────────────────────
+  private applyLevel() {
+    const lvl = LEVELS[this.levelIndex];
+    this.levelTimer = 0;
+    this.spawnTimer = 0;
     this.comboFlash = 0;
-    if (this.bossWave) {
-      this.boss = new Boss(this.w, this.wave);
-      this.toSpawn = 0;
-      this.bannerText = "WARNING";
-      this.bannerSub = "DREADNOUGHT INBOUND";
-    } else {
-      this.toSpawn = 5 + this.wave * 2;
-      this.spawnInterval = Math.max(0.4, 1.1 - this.wave * 0.06);
-      this.spawnTimer = 0.6;
-      this.bannerText = `WAVE ${this.wave}`;
-      this.bannerSub = "INCOMING";
+    this.starfield.setTint(lvl.tint);
+    if (lvl.isBoss) {
+      this.bossTier++;
+      this.boss = new Boss(this.w, this.bossTier);
+      this.bossRespawnTimer = 0;
     }
-    this.bannerTimer = 2;
+    this.bannerText = `LEVEL ${lvl.index}`;
+    this.bannerSub = lvl.galaxy.toUpperCase();
+    this.bannerTimer = 2.4;
   }
 
-  private waveKindFor(): EnemyKind {
-    const w = this.wave;
-    const bag: EnemyKind[] = ["grunt", "grunt", "grunt"];
-    if (w >= 2) bag.push("weaver");
-    if (w >= 3) bag.push("weaver", "diver");
-    if (w >= 4) bag.push("diver", "tank");
-    if (w >= 6) bag.push("tank", "diver", "weaver");
-    return pick(bag);
-  }
-
-  private spawnEnemy() {
+  private spawnEnemy(lvl: LevelConfig) {
     const size = 44;
     const x = rand(size, this.w - size);
-    this.enemies.push(new Enemy(x, -size, this.waveKindFor(), this.wave));
+    this.enemies.push(new Enemy(x, -size, pick(lvl.kinds), lvl.speedMul, lvl.hpMul));
   }
 
   // ── Core loop ──────────────────────────────────────────────────────────────
@@ -288,13 +412,27 @@ export class Game {
       }
     }
 
-    // Spawn enemies for the wave.
-    if (!this.bossWave && this.toSpawn > 0) {
+    // Time-based level progression: survive the duration, the level advances.
+    const lvl = LEVELS[this.levelIndex];
+    if (!lvl.isBoss) {
+      this.levelTimer += dt;
       this.spawnTimer -= dt;
       if (this.spawnTimer <= 0) {
-        this.spawnEnemy();
-        this.toSpawn--;
-        this.spawnTimer = this.spawnInterval;
+        this.spawnEnemy(lvl);
+        this.spawnTimer = lvl.spawnInterval;
+      }
+      if (this.levelTimer >= lvl.duration && this.levelIndex < LEVELS.length - 1) {
+        this.levelIndex++;
+        this.applyLevel();
+      }
+    } else if (!this.boss) {
+      this.bossRespawnTimer -= dt;
+      if (this.bossRespawnTimer <= 0) {
+        this.bossTier++;
+        this.boss = new Boss(w, this.bossTier);
+        this.bannerText = "WARNING";
+        this.bannerSub = `OVERLORD TIER ${this.bossTier} APPROACHING`;
+        this.bannerTimer = 2.2;
       }
     }
 
@@ -331,20 +469,14 @@ export class Game {
       if (gone) this.powerups.splice(i, 1);
     }
 
-    this.collide();
-
-    // Wave completion.
-    if (!this.bannerTimer || this.bannerTimer <= 0) {
-      const enemiesDone = !this.bossWave && this.toSpawn === 0 && this.enemies.length === 0;
-      const bossDone = this.bossWave && this.boss === null;
-      if (enemiesDone || bossDone) {
-        this.interWave += dt;
-        if (this.interWave > 1.1) {
-          this.interWave = 0;
-          this.nextWave();
-        }
-      }
+    // Update coins.
+    for (let i = this.coinEntities.length - 1; i >= 0; i--) {
+      const c = this.coinEntities[i];
+      const gone = c.update(dt, h);
+      if (gone) this.coinEntities.splice(i, 1);
     }
+
+    this.collide();
   }
 
   private collide() {
@@ -372,7 +504,7 @@ export class Game {
       }
       if (!consumed && this.boss && circleRectHit(b.x, b.y, b.r, this.boss.x, this.boss.y, this.boss.size, this.boss.size)) {
         consumed = true;
-        this.particles.spark(b.x, b.y, "#ff5bd0");
+        this.particles.spark(b.x, b.y, "#ff8a3d");
         if (this.boss.hit(b.damage)) {
           this.onBossKilled();
         } else {
@@ -428,6 +560,19 @@ export class Game {
         this.powerups.splice(pi, 1);
       }
     }
+
+    // Coins vs player.
+    for (let ci = this.coinEntities.length - 1; ci >= 0; ci--) {
+      const c = this.coinEntities[ci];
+      const dx = c.x - player.x;
+      const dy = c.y - player.y;
+      if (dx * dx + dy * dy < (c.r + player.r) ** 2) {
+        this.coinsRun++;
+        this.particles.spark(c.x, c.y, "#ffd24a");
+        this.audio.coin();
+        this.coinEntities.splice(ci, 1);
+      }
+    }
   }
 
   private onEnemyKilled(x: number, y: number, base: number, kind: EnemyKind) {
@@ -438,11 +583,14 @@ export class Game {
     const gained = Math.round(base * mult);
     this.score += gained;
     this.floats.spawn(x, y, `+${gained}`, this.combo >= 3 ? "#ff3fa4" : "#ffe066", this.combo >= 3 ? 22 : 18);
-    this.particles.burst(x, y, { count: kind === "tank" ? 26 : 16, big: kind === "tank" });
-    this.shake.add(kind === "tank" ? 0.28 : 0.16);
-    this.audio.explosion(kind === "tank");
-    if (Math.random() < 0.07 || (kind === "tank" && Math.random() < 0.4)) {
+    this.particles.burst(x, y, { count: kind === "reaper" ? 26 : 16, big: kind === "reaper" });
+    this.shake.add(kind === "reaper" ? 0.28 : 0.16);
+    this.audio.explosion(kind === "reaper");
+    if (Math.random() < 0.07 || (kind === "reaper" && Math.random() < 0.4)) {
       this.dropPowerup(x, y);
+    }
+    if (Math.random() < 0.4) {
+      this.coinEntities.push(new Coin(x, y));
     }
   }
 
@@ -450,18 +598,24 @@ export class Game {
     if (!this.boss) return;
     const x = this.boss.x;
     const y = this.boss.y;
-    this.score += 250;
-    this.floats.spawn(x, y, "+250", "#ff5bd0", 30);
+    const tier = this.boss.tier;
+    const reward = 200 + tier * 60;
+    this.score += reward;
+    this.floats.spawn(x, y, `+${reward}`, "#ff8a3d", 30);
     for (let i = 0; i < 5; i++) {
       setTimeout(() => {
-        this.particles.burst(x + rand(-40, 40), y + rand(-30, 30), { count: 30, big: true, speed: 5, colors: ["#ff5bd0", "#ff9be0", "#ffe066", "#ffffff"] });
+        this.particles.burst(x + rand(-40, 40), y + rand(-30, 30), { count: 30, big: true, speed: 5, colors: ["#ff8a3d", "#ffcf9e", "#ffe066", "#ffffff"] });
         this.shake.add(0.5);
         this.audio.explosion(true);
       }, i * 110);
     }
     this.dropPowerup(x - 24, y);
     this.dropPowerup(x + 24, y);
+    for (let i = 0; i < 6; i++) {
+      this.coinEntities.push(new Coin(x + rand(-50, 50), y + rand(-30, 30)));
+    }
     this.boss = null;
+    this.bossRespawnTimer = 3;
   }
 
   private dropPowerup(x: number, y: number) {
@@ -516,6 +670,7 @@ export class Game {
 
     if (this.state !== "menu") {
       for (const p of this.powerups) p.draw(ctx);
+      for (const c of this.coinEntities) c.draw(ctx);
       for (const e of this.enemies) e.draw(ctx);
       if (this.boss) this.boss.draw(ctx);
       this.drawBullets(ctx);
@@ -530,8 +685,10 @@ export class Game {
 
     // HUD + banners are not shaken.
     if (this.state === "playing" || this.state === "paused") {
+      const lvl = LEVELS[this.levelIndex];
       this.hud.draw(ctx, this.w, this.player, {
-        score: this.score, best: this.best, wave: this.wave, combo: this.combo, comboFlash: this.comboFlash,
+        score: this.score, best: this.best, level: lvl.index, galaxy: lvl.galaxy,
+        combo: this.combo, comboFlash: this.comboFlash, coins: this.coinsRun,
       }, this.time);
       if (this.boss) this.boss.drawHealthBar(ctx, this.w);
       if (this.bannerTimer > 0) {

@@ -1,4 +1,5 @@
-import { clamp, damp, TAU } from "../core/utils";
+import { clamp, damp, hexToRgb, TAU } from "../core/utils";
+import type { Avatar } from "../core/avatars";
 
 export class Player {
   x = 0;
@@ -20,7 +21,11 @@ export class Player {
   weaponLevel = 0; // 0 single, grows with spread powerup
   rapidUntil = 0;
 
-  constructor(private img: HTMLImageElement) {}
+  constructor(private img: HTMLImageElement, public avatar: Avatar) {}
+
+  setAvatar(avatar: Avatar) {
+    this.avatar = avatar;
+  }
 
   reset(w: number, h: number) {
     this.x = w / 2;
@@ -93,14 +98,16 @@ export class Player {
     ctx.rotate(this.tilt * 0.35);
     ctx.globalAlpha = blink ? 0.35 : 1;
 
-    // Engine flame.
+    // Engine flame, tinted to the selected pilot's colors.
+    const [pr, pg, pb] = hexToRgb(this.avatar.primary);
+    const [sr, sg, sb] = hexToRgb(this.avatar.secondary);
     const flame = this.h / 2 + 6 + Math.sin(time * 40) * 4 + this.thrust * 10;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     const fg = ctx.createLinearGradient(0, this.h / 2, 0, this.h / 2 + flame);
-    fg.addColorStop(0, "rgba(160,245,255,0.95)");
-    fg.addColorStop(0.5, "rgba(56,232,255,0.6)");
-    fg.addColorStop(1, "rgba(40,80,255,0)");
+    fg.addColorStop(0, `rgba(${sr},${sg},${sb},0.95)`);
+    fg.addColorStop(0.5, `rgba(${pr},${pg},${pb},0.6)`);
+    fg.addColorStop(1, `rgba(${pr},${pg},${pb},0)`);
     ctx.fillStyle = fg;
     ctx.beginPath();
     ctx.moveTo(-7, this.h / 2 - 2);
@@ -114,9 +121,9 @@ export class Player {
     if (this.shield > 0) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      ctx.strokeStyle = `rgba(56,232,255,${0.5 + 0.3 * Math.sin(time * 8)})`;
+      ctx.strokeStyle = `rgba(${pr},${pg},${pb},${0.5 + 0.3 * Math.sin(time * 8)})`;
       ctx.lineWidth = 2;
-      ctx.shadowColor = "#38e8ff";
+      ctx.shadowColor = this.avatar.primary;
       ctx.shadowBlur = 16;
       ctx.beginPath();
       ctx.arc(0, 0, this.r + 12, 0, TAU);
@@ -124,11 +131,13 @@ export class Player {
       ctx.restore();
     }
 
-    // Ship sprite (with glow) or vector fallback.
-    ctx.shadowColor = "#38e8ff";
+    // Ship sprite (with glow) or vector fallback, hue-shifted to the selected pilot.
+    ctx.shadowColor = this.avatar.primary;
     ctx.shadowBlur = 16;
     if (this.img.complete && this.img.naturalWidth > 0) {
+      ctx.filter = this.avatar.hue ? `hue-rotate(${this.avatar.hue}deg) saturate(1.3)` : "none";
       ctx.drawImage(this.img, -this.w / 2, -this.h / 2, this.w, this.h);
+      ctx.filter = "none";
     } else {
       ctx.beginPath();
       ctx.moveTo(0, -this.h / 2);
@@ -136,11 +145,11 @@ export class Player {
       ctx.lineTo(this.w / 2, this.h / 2);
       ctx.closePath();
       const g = ctx.createLinearGradient(0, -this.h / 2, 0, this.h / 2);
-      g.addColorStop(0, "#9af6ff");
-      g.addColorStop(1, "#1438cc");
+      g.addColorStop(0, this.avatar.secondary);
+      g.addColorStop(1, this.avatar.primary);
       ctx.fillStyle = g;
       ctx.fill();
-      ctx.strokeStyle = "#bff4ff";
+      ctx.strokeStyle = this.avatar.secondary;
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }

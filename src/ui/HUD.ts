@@ -3,9 +3,11 @@ import type { Player } from "../entities/Player";
 export interface HudState {
   score: number;
   best: number;
-  wave: number;
+  level: number;
+  galaxy: string;
   combo: number;
   comboFlash: number;
+  coins: number;
 }
 
 /** On-canvas heads-up display: score, wave, combo, health pips, buff timers. */
@@ -28,21 +30,29 @@ export class HUD {
     ctx.font = "600 12px Rajdhani, sans-serif";
     ctx.fillStyle = "rgba(255,210,74,0.85)";
     ctx.fillText(`BEST ${String(s.best).padStart(6, "0")}`, 22, 70);
+    ctx.fillStyle = "#ffd24a";
+    ctx.shadowColor = "#ffd24a";
+    ctx.shadowBlur = 6;
+    ctx.fillText(`◎ ${s.coins}`, 22, 88);
+    ctx.shadowBlur = 0;
 
-    // Wave (center).
+    // Level + galaxy name (center).
     ctx.textAlign = "center";
-    ctx.font = "700 16px Orbitron, sans-serif";
+    ctx.font = "700 12px Orbitron, sans-serif";
+    ctx.fillStyle = "rgba(255,210,74,0.8)";
+    ctx.fillText(`LEVEL ${s.level} / 5`, w / 2, 18);
+    ctx.font = "900 18px Orbitron, sans-serif";
     ctx.fillStyle = "#ffd24a";
     ctx.shadowColor = "#ffd24a";
     ctx.shadowBlur = 10;
-    ctx.fillText(`WAVE ${s.wave}`, w / 2, 44);
+    ctx.fillText(s.galaxy.toUpperCase(), w / 2, 36);
     ctx.shadowBlur = 0;
 
-    // Combo (center, below wave).
+    // Combo (center, below galaxy name).
     if (s.combo >= 2) {
       const scale = 1 + Math.min(0.5, s.comboFlash);
       ctx.save();
-      ctx.translate(w / 2, 74);
+      ctx.translate(w / 2, 80);
       ctx.scale(scale, scale);
       ctx.font = "900 20px Orbitron, sans-serif";
       ctx.fillStyle = "#ff3fa4";

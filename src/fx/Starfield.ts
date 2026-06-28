@@ -26,6 +26,7 @@ export class Starfield {
   private nebula = 0;
   private t = 0;
   private nextShoot = rand(2, 5);
+  private tint: [number, number, number] = [70, 50, 170];
 
   constructor(private w: number, private h: number) {
     this.regen();
@@ -35,6 +36,11 @@ export class Starfield {
     this.w = w;
     this.h = h;
     this.regen();
+  }
+
+  /** Tints the drifting nebula clouds to match the current galaxy/level. */
+  setTint(rgb: [number, number, number]) {
+    this.tint = rgb;
   }
 
   private regen() {
@@ -94,19 +100,20 @@ export class Starfield {
   draw(ctx: CanvasRenderingContext2D) {
     const { w, h } = this;
 
-    // Deep-space vertical gradient.
+    // Deep-space vertical gradient — near-black so the galaxy reads as dark void.
     const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, "#04010d");
-    bg.addColorStop(0.35, "#070121");
-    bg.addColorStop(0.7, "#0a0426");
-    bg.addColorStop(1, "#0c0214");
+    bg.addColorStop(0, "#000000");
+    bg.addColorStop(0.35, "#020108");
+    bg.addColorStop(0.7, "#030109");
+    bg.addColorStop(1, "#000000");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
-    // Drifting nebula clouds.
-    this.cloud(ctx, w * 0.26 + Math.sin(this.nebula * 0.4) * 36, h * 0.34 + Math.cos(this.nebula * 0.3) * 24, w * 0.42, [120, 30, 200]);
-    this.cloud(ctx, w * 0.74 + Math.cos(this.nebula * 0.35) * 30, h * 0.56 + Math.sin(this.nebula * 0.45) * 18, w * 0.4, [20, 110, 200]);
-    this.cloud(ctx, w * 0.52 + Math.sin(this.nebula * 0.25) * 44, h * 0.16 + Math.cos(this.nebula * 0.2) * 14, w * 0.34, [220, 30, 120]);
+    // Drifting nebula clouds, faint and tinted to the current galaxy.
+    const [tr, tg, tb] = this.tint;
+    this.cloud(ctx, w * 0.26 + Math.sin(this.nebula * 0.4) * 36, h * 0.34 + Math.cos(this.nebula * 0.3) * 24, w * 0.42, [tr, tg, tb]);
+    this.cloud(ctx, w * 0.74 + Math.cos(this.nebula * 0.35) * 30, h * 0.56 + Math.sin(this.nebula * 0.45) * 18, w * 0.4, [tb, tr, tg]);
+    this.cloud(ctx, w * 0.52 + Math.sin(this.nebula * 0.25) * 44, h * 0.16 + Math.cos(this.nebula * 0.2) * 14, w * 0.34, [tg, tb, tr]);
 
     // Stars.
     for (let li = 0; li < this.layers.length; li++) {
@@ -156,8 +163,8 @@ export class Starfield {
 
   private cloud(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, [cr, cg, cb]: number[]) {
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(${cr},${cg},${cb},0.16)`);
-    g.addColorStop(0.5, `rgba(${cr},${cg},${cb},0.07)`);
+    g.addColorStop(0, `rgba(${cr},${cg},${cb},0.1)`);
+    g.addColorStop(0.5, `rgba(${cr},${cg},${cb},0.04)`);
     g.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, this.w, this.h);

@@ -1,4 +1,4 @@
-export type EnemyKind = "grunt" | "weaver" | "diver" | "tank";
+export type EnemyKind = "scuttler" | "stinger" | "warden" | "reaper";
 export type PowerKind = "rapid" | "spread" | "shield";
 
 export interface Bullet {

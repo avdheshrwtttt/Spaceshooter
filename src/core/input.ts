@@ -40,8 +40,8 @@ export class Input {
   };
 
   private recompute() {
-    const left = this.keys.has("ArrowLeft") || this.keys.has("KeyA");
-    const right = this.keys.has("ArrowRight") || this.keys.has("KeyD");
+    const left = this.keys.has("ArrowLeft");
+    const right = this.keys.has("ArrowRight");
     this.axis = (right ? 1 : 0) - (left ? 1 : 0);
     this.firing = this.keys.has("Space");
   }

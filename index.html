@@ -21,15 +21,71 @@
       <div class="screen" id="menu">
         <div class="menu-inner">
           <h1 class="title" data-text="NEBULA STRIKE">NEBULA STRIKE</h1>
-          <p class="subtitle">Hold the line against the swarm.</p>
+          <p class="subtitle">Hold the line across five galaxies.</p>
+
+          <button class="pilot-chip" id="pilot-btn">
+            <span class="avatar-portrait cyclops" id="pilot-portrait"></span>
+            <span class="pilot-chip-text">PILOT: <b id="pilot-name">CYCLOPS</b></span>
+            <span class="pilot-chip-edit">CHANGE</span>
+          </button>
+
           <button class="btn primary" id="play-btn">▶ LAUNCH</button>
-          <div class="hi">Best Run · <span id="menu-best">0</span></div>
+          <button class="btn ghost" id="shop-btn">🛒 SHIP SHOP</button>
+
+          <div class="menu-stats-row">
+            <div class="hi">Best · <span id="menu-best">0</span></div>
+            <div class="hi gold">Credits · <span id="menu-credits">0</span> ◎</div>
+          </div>
+
           <div class="controls-hint">
-            <span><b>← →</b> / <b>A D</b> Move</span>
+            <span><b>← →</b> Move</span>
             <span><b>SPACE</b> Fire</span>
             <span><b>P</b> Pause</span>
             <span class="touch-only">Touch &amp; drag · auto-fire</span>
           </div>
+        </div>
+      </div>
+
+      <!-- ===== Avatar / pilot select ===== -->
+      <div class="screen hidden" id="avatar-select">
+        <div class="menu-inner">
+          <h2 class="title small">CHOOSE YOUR PILOT</h2>
+          <div class="avatar-grid">
+            <button class="avatar-card" data-avatar="cyclops">
+              <span class="avatar-portrait cyclops"></span>
+              <span class="avatar-name">CYCLOPS</span>
+            </button>
+            <button class="avatar-card" data-avatar="eren">
+              <span class="avatar-portrait eren"></span>
+              <span class="avatar-name">EREN</span>
+            </button>
+            <button class="avatar-card" data-avatar="ixia">
+              <span class="avatar-portrait ixia"></span>
+              <span class="avatar-name">IXIA</span>
+            </button>
+            <button class="avatar-card" data-avatar="nana">
+              <span class="avatar-portrait nana"></span>
+              <span class="avatar-name">NANA</span>
+            </button>
+          </div>
+          <button class="btn ghost" id="avatar-back-btn">BACK</button>
+        </div>
+      </div>
+
+      <!-- ===== Shop ===== -->
+      <div class="screen hidden" id="shop">
+        <div class="menu-inner">
+          <h2 class="title small">SHIP SHOP</h2>
+          <div class="hi gold">Credits · <span id="shop-credits">0</span> ◎</div>
+          <div class="shop-item">
+            <div class="shop-item-info">
+              <div class="shop-item-name">❖ Energy Shield</div>
+              <div class="shop-item-desc">Start every run with extra shield charges that absorb enemy fire.</div>
+              <div class="shop-pips" id="shop-pips"></div>
+            </div>
+            <button class="btn primary" id="shop-buy-btn">BUY</button>
+          </div>
+          <button class="btn ghost" id="shop-back-btn">BACK</button>
         </div>
       </div>
 
@@ -48,9 +104,10 @@
           <h2 class="title small danger">GAME OVER</h2>
           <div class="stats">
             <div><span id="go-score">0</span><label>SCORE</label></div>
-            <div><span id="go-wave">1</span><label>WAVE</label></div>
+            <div><span id="go-level">1</span><label>LEVEL</label></div>
             <div><span id="go-best">0</span><label>BEST</label></div>
           </div>
+          <div class="hi gold" id="go-coins">+0 ◎ Banked</div>
           <div class="new-best hidden" id="new-best">★ NEW RECORD ★</div>
           <button class="btn primary" id="retry-btn">↻ RETRY</button>
           <button class="btn ghost" id="menu-btn">MENU</button>
