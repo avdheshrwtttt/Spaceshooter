@@ -273,7 +273,8 @@ body {
   flex-shrink: 0;
   background: radial-gradient(circle at 35% 30%, #f2feff, var(--p) 55%, var(--s) 100%);
   box-shadow: 0 0 14px var(--p), inset 0 0 8px rgba(255, 255, 255, 0.5);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
+  animation: avatar-pulse 2.4s ease-in-out infinite;
 }
 .avatar-portrait::before {
   content: "";
@@ -289,28 +290,48 @@ body {
 .avatar-portrait::after {
   content: "";
   position: absolute;
-  top: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 10px;
-  height: 14px;
+  top: -6%;
+  left: 15%;
+  width: 70%;
+  height: 22%;
   background: var(--p);
   box-shadow: 0 0 6px var(--p);
 }
 .avatar-portrait.cyclops { --p: #38e8ff; --s: #0c3a55; }
-.avatar-portrait.eren { --p: #ff7a3d; --s: #551f06; }
-.avatar-portrait.ixia { --p: #7affc6; --s: #0c4d33; }
-.avatar-portrait.nana { --p: #ff7ad1; --s: #5a1240; }
+.avatar-portrait.eren { --p: #ff7a3d; --s: #551f06; animation-delay: 0.3s; }
+.avatar-portrait.ixia { --p: #7affc6; --s: #0c4d33; animation-delay: 0.6s; }
+.avatar-portrait.nana { --p: #ff7ad1; --s: #5a1240; animation-delay: 0.9s; }
+
+/* Boys — Cyclops & Eren: a bold forward mohawk fin and a sharper, slit-like visor. */
+.avatar-portrait.cyclops::before,
+.avatar-portrait.eren::before {
+  border-radius: 16%;
+}
 .avatar-portrait.cyclops::after,
 .avatar-portrait.eren::after {
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  top: -16%;
+  height: 32%;
+  clip-path: polygon(50% 0%, 80% 100%, 20% 100%);
+}
+
+/* Girls — Ixia & Nana: twin buns/pigtails and a softer, rounder visor. */
+.avatar-portrait.ixia::before,
+.avatar-portrait.nana::before {
+  border-radius: 50%;
 }
 .avatar-portrait.ixia::after,
 .avatar-portrait.nana::after {
-  border-radius: 50%;
-  width: 9px;
-  height: 9px;
-  top: -5px;
+  clip-path: polygon(0% 100%, 0% 35%, 18% 0%, 32% 45%, 50% 65%, 68% 45%, 82% 0%, 100% 35%, 100% 100%);
+}
+
+@keyframes avatar-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px var(--p), inset 0 0 8px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 22px var(--p), inset 0 0 11px rgba(255, 255, 255, 0.7);
+  }
 }
 
 .avatar-grid {
