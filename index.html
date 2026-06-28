@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#05010f" />
+    <meta name="description" content="Nebula Strike — a premium browser space shooter. Survive the swarm, beat the bosses, chase the high score." />
+    <title>Nebula Strike</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+
+      <!-- ===== Start menu ===== -->
+      <div class="screen" id="menu">
+        <div class="menu-inner">
+          <h1 class="title" data-text="NEBULA STRIKE">NEBULA STRIKE</h1>
+          <p class="subtitle">Hold the line against the swarm.</p>
+          <button class="btn primary" id="play-btn">▶ LAUNCH</button>
+          <div class="hi">Best Run · <span id="menu-best">0</span></div>
+          <div class="controls-hint">
+            <span><b>← →</b> / <b>A D</b> Move</span>
+            <span><b>SPACE</b> Fire</span>
+            <span><b>P</b> Pause</span>
+            <span class="touch-only">Touch &amp; drag · auto-fire</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Pause ===== -->
+      <div class="screen hidden" id="pause">
+        <div class="menu-inner">
+          <h2 class="title small">PAUSED</h2>
+          <button class="btn primary" id="resume-btn">RESUME</button>
+          <button class="btn ghost" id="quit-btn">QUIT TO MENU</button>
+        </div>
+      </div>
+
+      <!-- ===== Game over ===== -->
+      <div class="screen hidden" id="gameover">
+        <div class="menu-inner">
+          <h2 class="title small danger">GAME OVER</h2>
+          <div class="stats">
+            <div><span id="go-score">0</span><label>SCORE</label></div>
+            <div><span id="go-wave">1</span><label>WAVE</label></div>
+            <div><span id="go-best">0</span><label>BEST</label></div>
+          </div>
+          <div class="new-best hidden" id="new-best">★ NEW RECORD ★</div>
+          <button class="btn primary" id="retry-btn">↻ RETRY</button>
+          <button class="btn ghost" id="menu-btn">MENU</button>
+        </div>
+      </div>
+
+      <!-- ===== Mobile fire button (optional) ===== -->
+      <button class="touch-fire touch-only hidden" id="touch-fire">FIRE</button>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
