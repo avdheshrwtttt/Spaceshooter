@@ -66,9 +66,9 @@ export class HUD {
     ctx.textAlign = "right";
     ctx.font = "700 14px Orbitron, sans-serif";
     ctx.fillStyle = "rgba(223,246,255,0.6)";
-    ctx.fillText("HULL", w - 22, 18);
-    const pip = 16;
-    const gap = 6;
+    ctx.fillText("LIVES", w - 22, 18);
+    const pip = 12;
+    const gap = 4;
     const total = player.maxHealth;
     for (let i = 0; i < total; i++) {
       const px = w - 22 - (i + 1) * (pip + gap) + gap;

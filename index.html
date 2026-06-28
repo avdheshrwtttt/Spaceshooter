@@ -20,28 +20,34 @@
       <!-- ===== Start menu ===== -->
       <div class="screen" id="menu">
         <div class="menu-inner">
-          <h1 class="title" data-text="NEBULA STRIKE">NEBULA STRIKE</h1>
-          <p class="subtitle">Hold the line across five galaxies.</p>
-
-          <button class="pilot-chip" id="pilot-btn">
-            <span class="avatar-portrait cyclops" id="pilot-portrait"></span>
-            <span class="pilot-chip-text">PILOT: <b id="pilot-name">CYCLOPS</b></span>
-            <span class="pilot-chip-edit">CHANGE</span>
-          </button>
-
-          <button class="btn primary" id="play-btn">▶ LAUNCH</button>
-          <button class="btn ghost" id="shop-btn">🛒 SHIP SHOP</button>
-
-          <div class="menu-stats-row">
-            <div class="hi">Best · <span id="menu-best">0</span></div>
-            <div class="hi gold">Credits · <span id="menu-credits">0</span> ◎</div>
+          <div class="menu-header">
+            <h1 class="title" data-text="NEBULA STRIKE">NEBULA STRIKE</h1>
+            <p class="subtitle">Hold the line across five galaxies.</p>
           </div>
 
-          <div class="controls-hint">
-            <span><b>↑ ↓ ← →</b> Move</span>
-            <span><b>SPACE</b> Fire</span>
-            <span><b>P</b> Pause</span>
-            <span class="touch-only">Tap FIRE · auto-fire</span>
+          <div class="menu-actions">
+            <button class="pilot-chip" id="pilot-btn">
+              <span class="avatar-portrait cyclops" id="pilot-portrait"></span>
+              <span class="pilot-chip-text">PILOT: <b id="pilot-name">CYCLOPS</b></span>
+              <span class="pilot-chip-edit">CHANGE</span>
+            </button>
+
+            <button class="btn primary" id="play-btn">▶ LAUNCH</button>
+            <button class="btn ghost" id="shop-btn">🛒 SHIP SHOP</button>
+          </div>
+
+          <div class="menu-footer">
+            <div class="menu-stats-row">
+              <div class="hi">Best · <span id="menu-best">0</span></div>
+              <div class="hi gold">Credits · <span id="menu-credits">0</span> ◎</div>
+            </div>
+
+            <div class="controls-hint">
+              <span><b>↑ ↓ ← →</b> Move</span>
+              <span><b>SPACE</b> Fire</span>
+              <span><b>P</b> Pause</span>
+              <span class="touch-only">Tap FIRE · auto-fire</span>
+            </div>
           </div>
         </div>
       </div>
@@ -116,6 +122,9 @@
 
       <!-- ===== Mobile fire button (optional) ===== -->
       <button class="touch-fire touch-only hidden" id="touch-fire">FIRE</button>
+
+      <!-- ===== In-game pause trigger ===== -->
+      <button class="pause-btn hidden" id="pause-btn" title="Pause">❙❙</button>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

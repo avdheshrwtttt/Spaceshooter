@@ -12,8 +12,8 @@ export class Player {
   tilt = 0; // visual banking, -1..1
   thrust = 0; // engine flame strength 0..1
 
-  maxHealth = 5;
-  health = 5;
+  maxHealth = 10;
+  health = 10;
   shield = 0; // permanent hits absorbed (bought in shop / rare drops)
   aegisUntil = 0; // timed full-damage-block buff, separate from `shield`
   invuln = 0; // seconds of i-frames
@@ -77,20 +77,21 @@ export class Player {
     if (this.weaponLevel > 0 && performance.now() > this.weaponUntil) this.weaponLevel = 0;
   }
 
-  /** Returns muzzle spawn points if the weapon is ready, else null. */
-  tryFire(): { x: number; y: number; angle: number; len: number }[] | null {
+  /** Returns muzzle spawn points if the weapon is ready, else null. `inBossFight` guarantees at least a 3-shot spread. */
+  tryFire(inBossFight = false): { x: number; y: number; angle: number; len: number }[] | null {
     if (this.fireCd > 0) return null;
     this.fireCd = this.rapid ? 0.11 : 0.2;
     const nose = this.y - this.h / 2;
-    const len = this.weaponLevel >= 2 ? 26 : this.weaponLevel >= 1 ? 22 : 14;
+    const level = inBossFight ? Math.max(1, this.weaponLevel) : this.weaponLevel;
+    const len = level >= 2 ? 26 : level >= 1 ? 22 : 14;
     const shots: { x: number; y: number; angle: number; len: number }[] = [
       { x: this.x, y: nose, angle: -Math.PI / 2, len },
     ];
-    if (this.weaponLevel >= 1) {
+    if (level >= 1) {
       shots.push({ x: this.x - 12, y: nose + 8, angle: -Math.PI / 2 - 0.18, len });
       shots.push({ x: this.x + 12, y: nose + 8, angle: -Math.PI / 2 + 0.18, len });
     }
-    if (this.weaponLevel >= 2) {
+    if (level >= 2) {
       shots.push({ x: this.x - 20, y: nose + 14, angle: -Math.PI / 2 - 0.36, len });
       shots.push({ x: this.x + 20, y: nose + 14, angle: -Math.PI / 2 + 0.36, len });
     }

@@ -73,6 +73,7 @@ export class Game {
   private elAvatarSelect = document.getElementById("avatar-select")!;
   private elShop = document.getElementById("shop")!;
   private elTouchFire = document.getElementById("touch-fire") as HTMLButtonElement;
+  private elPauseBtn = document.getElementById("pause-btn") as HTMLButtonElement;
 
   constructor(private canvas: HTMLCanvasElement, shipImg: HTMLImageElement) {
     this.ctx = canvas.getContext("2d")!;
@@ -116,6 +117,7 @@ export class Game {
     on("resume-btn", () => this.togglePause());
     on("menu-btn", () => this.toMenu());
     on("quit-btn", () => this.toMenu());
+    on("pause-btn", () => this.togglePause());
     on("pilot-btn", () => this.openAvatarSelect());
     on("avatar-back-btn", () => this.closeAvatarSelect());
     on("shop-btn", () => this.openShop());
@@ -291,6 +293,7 @@ export class Game {
     this.show(this.elGameOver, false);
     this.show(this.elPause, false);
     this.show(this.elTouchFire, document.body.classList.contains("touch"));
+    this.show(this.elPauseBtn, true);
     this.applyLevel();
   }
 
@@ -302,6 +305,7 @@ export class Game {
     this.show(this.elAvatarSelect, false);
     this.show(this.elShop, false);
     this.show(this.elTouchFire, false);
+    this.show(this.elPauseBtn, false);
     this.updateBestLabels();
     this.updateCreditsLabels();
   }
@@ -310,9 +314,11 @@ export class Game {
     if (this.state === "playing") {
       this.state = "paused";
       this.show(this.elPause, true);
+      this.show(this.elPauseBtn, false);
     } else if (this.state === "paused") {
       this.state = "playing";
       this.show(this.elPause, false);
+      this.show(this.elPauseBtn, true);
       this.last = performance.now();
     }
   }
@@ -337,6 +343,7 @@ export class Game {
     this.updateCreditsLabels();
     this.show(document.getElementById("new-best")!, isBest);
     this.show(this.elTouchFire, false);
+    this.show(this.elPauseBtn, false);
     setTimeout(() => this.show(this.elGameOver, true), 700);
   }
 
@@ -397,7 +404,7 @@ export class Game {
     this.player.update(dt, this.input.axisX, this.input.axisY, w, h);
     this.player.thrust > 0 && this.particles.thruster(this.player.x, this.player.y + this.player.h / 2, this.player.thrust);
     if (this.input.firing) {
-      const shots = this.player.tryFire();
+      const shots = this.player.tryFire(this.boss !== null);
       if (shots) {
         for (const s of shots) {
           this.bullets.push({
