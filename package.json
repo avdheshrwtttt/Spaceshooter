@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Nebula Strike — a premium browser space shooter built with TypeScript + Canvas.",
+  "description": "Space Shooter — a premium browser space shooter built with TypeScript + Canvas.",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

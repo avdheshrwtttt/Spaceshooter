@@ -1,4 +1,4 @@
-# 🚀 Nebula Strike
+# 🚀 Space Shooter
 
 A premium browser **space shooter** built with **TypeScript + HTML5 Canvas** and zero gameplay dependencies. Fly through a living galaxy, hold the line against escalating waves, and take down dreadnought bosses while chasing a high score.
 
