@@ -1,4 +1,4 @@
-import type { EnemyKind } from "../entities/types";
+import type { BossTheme, EnemyKind } from "../entities/types";
 
 export interface LevelConfig {
   index: number;
@@ -10,6 +10,7 @@ export interface LevelConfig {
   spawnInterval: number;
   tint: [number, number, number];
   isBoss: boolean;
+  boss: BossTheme;
 }
 
 export const LEVELS: LevelConfig[] = [
@@ -23,6 +24,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 1.0,
     tint: [70, 50, 170],
     isBoss: false,
+    boss: { name: "MILKY WAY SENTINEL", mid: "#8a5dff", light: "#d9c9ff", dark: "#1c0a44", hpBase: 46, speedBase: 68, pods: 4 },
   },
   {
     index: 2,
@@ -34,6 +36,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0.85,
     tint: [40, 90, 190],
     isBoss: false,
+    boss: { name: "ANDROMEDA DEVOURER", mid: "#3fd1ff", light: "#cdf4ff", dark: "#04263d", hpBase: 64, speedBase: 80, pods: 4 },
   },
   {
     index: 3,
@@ -45,6 +48,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0.72,
     tint: [30, 140, 150],
     isBoss: false,
+    boss: { name: "SPIRAL MARAUDER", mid: "#2fe0c0", light: "#cdfff0", dark: "#04332b", hpBase: 86, speedBase: 92, pods: 5 },
   },
   {
     index: 4,
@@ -56,6 +60,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0.6,
     tint: [20, 100, 190],
     isBoss: false,
+    boss: { name: "WHIRLPOOL LEVIATHAN", mid: "#4a7dff", light: "#cfe0ff", dark: "#06173d", hpBase: 116, speedBase: 104, pods: 6 },
   },
   {
     index: 5,
@@ -67,5 +72,6 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0,
     tint: [190, 80, 30],
     isBoss: true,
+    boss: { name: "CARTWHEEL OVERLORD", mid: "#ff8a3d", light: "#ffcf9e", dark: "#5c0a00", hpBase: 72, speedBase: 86, pods: 6 },
   },
 ];

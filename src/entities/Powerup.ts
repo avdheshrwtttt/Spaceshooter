@@ -5,6 +5,7 @@ const STYLE: Record<PowerKind, { color: string; icon: string; label: string }> =
   rapid: { color: "#ffd24a", icon: "⚡", label: "RAPID FIRE" },
   spread: { color: "#38e8ff", icon: "✸", label: "SPREAD +1" },
   shield: { color: "#7affc6", icon: "❖", label: "SHIELD" },
+  aegis: { color: "#caff70", icon: "✪", label: "TEMP SHIELD" },
 };
 
 export class Powerup {
@@ -59,4 +60,4 @@ export class Powerup {
   }
 }
 
-export const POWER_KINDS: PowerKind[] = ["rapid", "spread", "shield"];
+export const POWER_KINDS: PowerKind[] = ["rapid", "spread", "shield", "aegis"];

@@ -1,27 +1,20 @@
-// Keyboard + touch/pointer input. Exposes a simple polled state plus events.
+// Keyboard-only input. Arrow keys steer on both axes, Space fires.
 
 export class Input {
   private keys = new Set<string>();
 
-  /** Horizontal axis from -1 (left) to 1 (right), keyboard only. */
-  axis = 0;
+  /** Horizontal axis from -1 (left) to 1 (right). */
+  axisX = 0;
+  /** Vertical axis from -1 (up) to 1 (down). */
+  axisY = 0;
   firing = false;
 
-  /** Absolute target X from touch/drag, or null when not steering by pointer. */
-  pointerX: number | null = null;
-
   onPause = () => {};
-  onShoot = () => {}; // single-press shoot (menus etc. ignore)
   onAnyKey = () => {}; // used to unlock audio
 
-  constructor(private canvas: HTMLCanvasElement) {
+  constructor() {
     window.addEventListener("keydown", this.handleKeyDown);
     window.addEventListener("keyup", this.handleKeyUp);
-
-    canvas.addEventListener("pointerdown", this.handlePointer);
-    canvas.addEventListener("pointermove", this.handlePointer);
-    window.addEventListener("pointerup", this.handlePointerUp);
-    window.addEventListener("pointercancel", this.handlePointerUp);
   }
 
   private handleKeyDown = (e: KeyboardEvent) => {
@@ -42,31 +35,22 @@ export class Input {
   private recompute() {
     const left = this.keys.has("ArrowLeft");
     const right = this.keys.has("ArrowRight");
-    this.axis = (right ? 1 : 0) - (left ? 1 : 0);
+    const up = this.keys.has("ArrowUp");
+    const down = this.keys.has("ArrowDown");
+    this.axisX = (right ? 1 : 0) - (left ? 1 : 0);
+    this.axisY = (down ? 1 : 0) - (up ? 1 : 0);
     this.firing = this.keys.has("Space");
   }
 
-  private handlePointer = (e: PointerEvent) => {
-    this.onAnyKey();
-    const rect = this.canvas.getBoundingClientRect();
-    this.pointerX = e.clientX - rect.left;
-    this.firing = true; // touch = steer + auto-fire
-  };
-
-  private handlePointerUp = () => {
-    this.pointerX = null;
-    if (this.axis === 0) this.firing = false;
-  };
-
-  /** Force-fire flag from an on-screen button. */
+  /** Force-fire flag from an on-screen button (mobile). */
   setTouchFire(on: boolean) {
-    this.firing = on || this.axis !== 0 || this.pointerX !== null;
+    this.firing = on || this.axisX !== 0 || this.axisY !== 0;
   }
 
   clear() {
     this.keys.clear();
-    this.axis = 0;
+    this.axisX = 0;
+    this.axisY = 0;
     this.firing = false;
-    this.pointerX = null;
   }
 }

@@ -77,7 +77,7 @@ export class Game {
   constructor(private canvas: HTMLCanvasElement, shipImg: HTMLImageElement) {
     this.ctx = canvas.getContext("2d")!;
     this.player = new Player(shipImg, getSelectedAvatar());
-    this.input = new Input(canvas);
+    this.input = new Input();
     this.starfield = new Starfield(1, 1);
 
     this.best = Number(localStorage.getItem(BEST_KEY) ?? 0) || 0;
@@ -349,7 +349,7 @@ export class Game {
     this.starfield.setTint(lvl.tint);
     if (lvl.isBoss) {
       this.bossTier++;
-      this.boss = new Boss(this.w, this.bossTier);
+      this.boss = new Boss(this.w, this.bossTier, lvl.boss);
       this.bossRespawnTimer = 0;
     }
     this.bannerText = `LEVEL ${lvl.index}`;
@@ -358,7 +358,7 @@ export class Game {
   }
 
   private spawnEnemy(lvl: LevelConfig) {
-    const size = 44;
+    const size = 65; // half the largest (2.5x-scaled) enemy footprint, so spawns stay on-screen
     const x = rand(size, this.w - size);
     this.enemies.push(new Enemy(x, -size, pick(lvl.kinds), lvl.speedMul, lvl.hpMul));
   }
@@ -394,7 +394,7 @@ export class Game {
     if (this.comboFlash > 0) this.comboFlash -= dt * 2;
 
     // Player.
-    this.player.update(dt, this.input.axis, this.input.pointerX, w);
+    this.player.update(dt, this.input.axisX, this.input.axisY, w, h);
     this.player.thrust > 0 && this.particles.thruster(this.player.x, this.player.y + this.player.h / 2, this.player.thrust);
     if (this.input.firing) {
       const shots = this.player.tryFire();
@@ -404,7 +404,7 @@ export class Game {
             x: s.x, y: s.y,
             vx: Math.cos(s.angle) * 760,
             vy: Math.sin(s.angle) * 760,
-            r: 4, friendly: true, damage: 1, color: "#ffe066", life: 2,
+            r: 4, friendly: true, damage: 1, color: "#ffe066", life: 2, len: s.len,
           });
         }
         this.particles.spark(this.player.x, this.player.y - this.player.h / 2, "#ffe066");
@@ -412,24 +412,29 @@ export class Game {
       }
     }
 
-    // Time-based level progression: survive the duration, the level advances.
+    // Time-based level progression: survive the duration, then a galaxy-themed
+    // boss closes the level out. The level only advances once that boss dies.
     const lvl = LEVELS[this.levelIndex];
     if (!lvl.isBoss) {
-      this.levelTimer += dt;
-      this.spawnTimer -= dt;
-      if (this.spawnTimer <= 0) {
-        this.spawnEnemy(lvl);
-        this.spawnTimer = lvl.spawnInterval;
-      }
-      if (this.levelTimer >= lvl.duration && this.levelIndex < LEVELS.length - 1) {
-        this.levelIndex++;
-        this.applyLevel();
+      if (this.levelTimer < lvl.duration) {
+        this.levelTimer += dt;
+        this.spawnTimer -= dt;
+        if (this.spawnTimer <= 0) {
+          this.spawnEnemy(lvl);
+          this.spawnTimer = lvl.spawnInterval;
+        }
+        if (this.levelTimer >= lvl.duration && !this.boss) {
+          this.boss = new Boss(w, 1, lvl.boss);
+          this.bannerText = "WARNING";
+          this.bannerSub = `${lvl.boss.name} APPROACHING`;
+          this.bannerTimer = 2.4;
+        }
       }
     } else if (!this.boss) {
       this.bossRespawnTimer -= dt;
       if (this.bossRespawnTimer <= 0) {
         this.bossTier++;
-        this.boss = new Boss(w, this.bossTier);
+        this.boss = new Boss(w, this.bossTier, lvl.boss);
         this.bannerText = "WARNING";
         this.bannerSub = `OVERLORD TIER ${this.bossTier} APPROACHING`;
         this.bannerTimer = 2.2;
@@ -568,7 +573,8 @@ export class Game {
       const dy = c.y - player.y;
       if (dx * dx + dy * dy < (c.r + player.r) ** 2) {
         this.coinsRun++;
-        this.particles.spark(c.x, c.y, "#ffd24a");
+        this.floats.spawn(c.x, c.y - 6, "+1 ◎", "#ffd24a", 16);
+        this.particles.burst(c.x, c.y, { count: 10, speed: 2.2, colors: ["#ffd24a", "#fff3c2"] });
         this.audio.coin();
         this.coinEntities.splice(ci, 1);
       }
@@ -591,15 +597,21 @@ export class Game {
     }
     if (Math.random() < 0.4) {
       this.coinEntities.push(new Coin(x, y));
+      // Temporary shields ride along with coin drops, not just the generic powerup roll.
+      if (Math.random() < 0.18) {
+        this.powerups.push(new Powerup(x + rand(-20, 20), y - 10, "aegis"));
+      }
     }
   }
 
   private onBossKilled() {
     if (!this.boss) return;
+    const lvl = LEVELS[this.levelIndex];
     const x = this.boss.x;
     const y = this.boss.y;
     const tier = this.boss.tier;
-    const reward = 200 + tier * 60;
+    const wasFinalBoss = lvl.isBoss;
+    const reward = 200 + tier * 60 + (lvl.index - 1) * 30;
     this.score += reward;
     this.floats.spawn(x, y, `+${reward}`, "#ff8a3d", 30);
     for (let i = 0; i < 5; i++) {
@@ -615,7 +627,12 @@ export class Game {
       this.coinEntities.push(new Coin(x + rand(-50, 50), y + rand(-30, 30)));
     }
     this.boss = null;
-    this.bossRespawnTimer = 3;
+    if (wasFinalBoss) {
+      this.bossRespawnTimer = 3;
+    } else if (this.levelIndex < LEVELS.length - 1) {
+      this.levelIndex++;
+      this.applyLevel();
+    }
   }
 
   private dropPowerup(x: number, y: number) {
@@ -629,10 +646,13 @@ export class Game {
         this.player.rapidUntil = performance.now() + 6000;
         break;
       case "spread":
-        this.player.weaponLevel = Math.min(2, this.player.weaponLevel + 1);
+        this.player.boostWeapon();
         break;
       case "shield":
         this.player.shield = Math.min(3, this.player.shield + 1);
+        break;
+      case "aegis":
+        this.player.grantAegis(8);
         break;
     }
   }
@@ -707,8 +727,9 @@ export class Game {
       ctx.fillStyle = b.color;
       if (b.friendly) {
         // streak
+        const len = b.len ?? 14;
         ctx.beginPath();
-        ctx.roundRect(b.x - b.r / 2, b.y - 7, b.r, 14, b.r / 2);
+        ctx.roundRect(b.x - b.r / 2, b.y - len / 2, b.r, len, b.r / 2);
         ctx.fill();
       } else {
         ctx.beginPath();

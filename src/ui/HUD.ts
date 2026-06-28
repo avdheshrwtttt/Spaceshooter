@@ -96,6 +96,11 @@ export class HUD {
       this.badge(ctx, w - 22, by, `❖ SHIELD ${player.shield}`, "#7affc6");
       by += 22;
     }
+    if (player.aegisActive) {
+      const remain = ((player.aegisUntil - time * 1000) / 1000).toFixed(1);
+      this.badge(ctx, w - 22, by, `✪ AEGIS ${remain}s`, "#caff70");
+      by += 22;
+    }
     if (player.rapid) {
       const remain = ((player.rapidUntil - time * 1000) / 1000).toFixed(1);
       this.badge(ctx, w - 22, by, `⚡ RAPID ${remain}s`, "#ffd24a");

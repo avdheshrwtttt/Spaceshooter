@@ -13,11 +13,12 @@ interface EnemyConfig {
   shots: number;
 }
 
+// Sizes are 2.5x their original design value — bigger, more imposing villains.
 const CONFIG: Record<EnemyKind, EnemyConfig> = {
-  scuttler: { size: 32, hp: 1, baseSpeed: 90, score: 10, body: ["#7a3a7a", "#2a0e33"], glow: "#ff5d5d", canShoot: false, fireRate: [0, 0], shots: 0 },
-  stinger: { size: 30, hp: 2, baseSpeed: 112, score: 16, body: ["#ffe066", "#a88200"], glow: "#ffd23f", canShoot: true, fireRate: [1.4, 2.6], shots: 1 },
-  warden: { size: 42, hp: 3, baseSpeed: 88, score: 22, body: ["#6b3fd6", "#1c0a44"], glow: "#8a5dff", canShoot: false, fireRate: [0, 0], shots: 0 },
-  reaper: { size: 50, hp: 5, baseSpeed: 58, score: 32, body: ["#525a64", "#15171a"], glow: "#ff3d5d", canShoot: true, fireRate: [0.9, 1.6], shots: 2 },
+  scuttler: { size: 80, hp: 1, baseSpeed: 90, score: 10, body: ["#7a3a7a", "#2a0e33"], glow: "#ff5d5d", canShoot: false, fireRate: [0, 0], shots: 0 },
+  stinger: { size: 75, hp: 2, baseSpeed: 112, score: 16, body: ["#ffe066", "#a88200"], glow: "#ffd23f", canShoot: true, fireRate: [1.4, 2.6], shots: 1 },
+  warden: { size: 105, hp: 3, baseSpeed: 88, score: 22, body: ["#6b3fd6", "#1c0a44"], glow: "#8a5dff", canShoot: false, fireRate: [0, 0], shots: 0 },
+  reaper: { size: 125, hp: 5, baseSpeed: 58, score: 32, body: ["#525a64", "#15171a"], glow: "#ff3d5d", canShoot: true, fireRate: [0.9, 1.6], shots: 2 },
 };
 
 export class Enemy {
