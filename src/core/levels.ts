@@ -24,7 +24,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 1.3,
     tint: [70, 50, 170],
     isBoss: false,
-    boss: { name: "MILKY WAY SENTINEL", mid: "#8a5dff", light: "#d9c9ff", dark: "#1c0a44", hpBase: 34, speedBase: 56, pods: 4 },
+    boss: { name: "MILKY WAY SENTINEL", kind: "wraith", mid: "#8a5dff", light: "#d9c9ff", dark: "#1c0a44", hpBase: 34, speedBase: 56, pods: 4 },
   },
   {
     index: 2,
@@ -36,7 +36,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 1.05,
     tint: [40, 90, 190],
     isBoss: false,
-    boss: { name: "ANDROMEDA DEVOURER", mid: "#3fd1ff", light: "#cdf4ff", dark: "#04263d", hpBase: 50, speedBase: 66, pods: 4 },
+    boss: { name: "ANDROMEDA DEVOURER", kind: "specter", mid: "#3fd1ff", light: "#cdf4ff", dark: "#04263d", hpBase: 50, speedBase: 66, pods: 4 },
   },
   {
     index: 3,
@@ -48,7 +48,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0.9,
     tint: [30, 140, 150],
     isBoss: false,
-    boss: { name: "SPIRAL MARAUDER", mid: "#2fe0c0", light: "#cdfff0", dark: "#04332b", hpBase: 68, speedBase: 76, pods: 5 },
+    boss: { name: "SPIRAL MARAUDER", kind: "golem", mid: "#2fe0c0", light: "#cdfff0", dark: "#04332b", hpBase: 68, speedBase: 76, pods: 5 },
   },
   {
     index: 4,
@@ -60,7 +60,7 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0.78,
     tint: [20, 100, 190],
     isBoss: false,
-    boss: { name: "WHIRLPOOL LEVIATHAN", mid: "#4a7dff", light: "#cfe0ff", dark: "#06173d", hpBase: 92, speedBase: 88, pods: 6 },
+    boss: { name: "WHIRLPOOL LEVIATHAN", kind: "leviathan", mid: "#4a7dff", light: "#cfe0ff", dark: "#06173d", hpBase: 92, speedBase: 88, pods: 6 },
   },
   {
     index: 5,
@@ -72,6 +72,6 @@ export const LEVELS: LevelConfig[] = [
     spawnInterval: 0,
     tint: [190, 80, 30],
     isBoss: true,
-    boss: { name: "CARTWHEEL OVERLORD", mid: "#ff8a3d", light: "#ffcf9e", dark: "#5c0a00", hpBase: 72, speedBase: 86, pods: 6 },
+    boss: { name: "CARTWHEEL OVERLORD", kind: "overlord", mid: "#ffd24a", light: "#fff3c2", dark: "#3a0a4a", hpBase: 72, speedBase: 86, pods: 6 },
   },
 ];

@@ -62,31 +62,20 @@ export class HUD {
       ctx.restore();
     }
 
-    // Health pips + shield (right).
+    // Lives, as a row of hearts (right).
     ctx.textAlign = "right";
     ctx.font = "700 14px Orbitron, sans-serif";
     ctx.fillStyle = "rgba(223,246,255,0.6)";
     ctx.fillText("LIVES", w - 22, 18);
-    const pip = 12;
+    const pip = 13;
     const gap = 4;
     const total = player.maxHealth;
+    const critical = player.health <= 2;
     for (let i = 0; i < total; i++) {
-      const px = w - 22 - (i + 1) * (pip + gap) + gap;
-      const py = 40;
+      const cx = w - 22 - (i + 1) * (pip + gap) + gap + pip / 2;
+      const cy = 40 + pip / 2;
       const filled = total - 1 - i < player.health;
-      ctx.beginPath();
-      ctx.roundRect(px, py, pip, pip, 3);
-      if (filled) {
-        ctx.fillStyle = player.health <= 1 ? "#ff4d5e" : "#38e8ff";
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 8;
-        ctx.fill();
-      } else {
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "rgba(223,246,255,0.25)";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
+      this.heart(ctx, cx, cy, pip, filled, critical, time);
     }
     ctx.shadowBlur = 0;
 
@@ -111,6 +100,31 @@ export class HUD {
     }
 
     ctx.restore();
+  }
+
+  private heart(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, filled: boolean, critical: boolean, time: number) {
+    const w = size;
+    const h = size * 0.92;
+    const top = cy - h * 0.42;
+    ctx.beginPath();
+    ctx.moveTo(cx, top + h * 0.3);
+    ctx.bezierCurveTo(cx, top, cx - w / 2, top, cx - w / 2, top + h * 0.3);
+    ctx.bezierCurveTo(cx - w / 2, top + h * 0.62, cx, top + h * 0.78, cx, top + h);
+    ctx.bezierCurveTo(cx, top + h * 0.78, cx + w / 2, top + h * 0.62, cx + w / 2, top + h * 0.3);
+    ctx.bezierCurveTo(cx + w / 2, top, cx, top, cx, top + h * 0.3);
+    ctx.closePath();
+    if (filled) {
+      const pulse = critical ? 0.7 + 0.3 * Math.sin(time * 9) : 1;
+      ctx.fillStyle = critical ? "#ff7a8c" : "#ff4d5e";
+      ctx.shadowColor = "#ff4d5e";
+      ctx.shadowBlur = (critical ? 12 : 7) * pulse;
+      ctx.fill();
+    } else {
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(255,77,94,0.35)";
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+    }
   }
 
   private badge(ctx: CanvasRenderingContext2D, xRight: number, y: number, text: string, color: string) {

@@ -4,9 +4,9 @@ import type { Avatar } from "../core/avatars";
 export class Player {
   x = 0;
   y = 0;
-  readonly w = 44;
-  readonly h = 52;
-  readonly r = 18; // collision radius
+  readonly w = 50;
+  readonly h = 50;
+  readonly r = 19; // collision radius
   speed = 560; // px/s
 
   tilt = 0; // visual banking, -1..1

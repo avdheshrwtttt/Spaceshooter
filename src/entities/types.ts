@@ -14,9 +14,12 @@ export interface Bullet {
   len?: number; // visual streak length for friendly bullets; defaults to 14
 }
 
+export type BossKind = "wraith" | "specter" | "golem" | "leviathan" | "overlord";
+
 /** Visual + difficulty profile for a per-galaxy boss encounter. */
 export interface BossTheme {
   name: string;
+  kind: BossKind;
   mid: string;
   light: string;
   dark: string;
